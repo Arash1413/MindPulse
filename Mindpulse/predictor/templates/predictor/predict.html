@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MindPulse | سنجش جامع بهزیستی</title>
+    <!-- Bootstrap RTL CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <style>
+        body { 
+            background-color: #f0f4f8; 
+            font-family: Tahoma, 'Vazirmatn', sans-serif; 
+        }
+        .card-custom { 
+            border-radius: 16px; 
+            border: none; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
+        }
+        .feature-title { 
+            font-weight: 700; 
+            color: #1e293b; 
+        }
+        .feature-desc { 
+            font-size: 0.85rem; 
+            color: #64748b; 
+            margin-bottom: 8px; 
+            line-height: 1.4;
+        }
+        .section-header { 
+            border-right: 4px solid #0d6efd; 
+            padding-right: 12px; 
+            margin-bottom: 24px; 
+            font-weight: 700; 
+        }
+        .section-header.text-success { border-right-color: #198754; }
+        .section-header.text-danger { border-right-color: #dc3545; }
+        .scale-badge { 
+            background-color: #e2e8f0; 
+            color: #334155; 
+            font-size: 0.75rem; 
+            padding: 2px 8px; 
+            border-radius: 6px; 
+            font-weight: 600; 
+        }
+        .form-control:focus, .form-select:focus {
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+            border-color: #86b7fe;
+        }
+    </style>
+</head>
+<body class="pb-5">
+
+<!-- 🌐 نوار بالایی سایت (Navbar) -->
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4">
+    <div class="container">
+        <!-- لوگو و نام سامانه -->
+        <a class="navbar-brand fw-bold text-primary fs-4" href="#">
+            🧠 MindPulse
+        </a>
+
+        <!-- دکمه‌های سمت چپ (ورود / ثبت‌نام / پروفایل کاربر) -->
+        <div class="d-flex align-items-center gap-2">
+            {% if user.is_authenticated %}
+                <!-- ۱. اگر کاربر لاگین است: دکمه ورود به حساب کاربری/سوابق -->
+                <span class="text-muted small d-none d-md-inline me-2">سلام، <strong>{{ user.username }}</strong></span>
+                
+                <a href="{% url 'history' %}" class="btn btn-primary btn-sm fw-bold px-3">
+                    📈 مشاهده سوابق و حساب کاربری
+                </a>
+                
+                <!-- دکمه خروج -->
+                <form action="{% url 'logout' %}" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger btn-sm">خروج</button>
+                </form>
+
+            {% else %}
+                <!-- ۲. اگر کاربر هنوز لاگین نکرده است: دکمه‌های ورود و ثبت‌نام -->
+                <a href="{% url 'login' %}" class="btn btn-outline-primary btn-sm px-3">
+                    🔑 ورود
+                </a>
+                <a href="{% url 'register' %}" class="btn btn-primary btn-sm px-3 fw-bold">
+                    📝 ثبت‌نام
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <!-- 🔘 نوار بالا شامل دکمه مقایسه مدل‌ها -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold text-dark mb-0">سامانه ارزیابی MindPulse</h4>
+        <a href="{% url 'compare' %}" class="btn btn-outline-primary fw-bold shadow-sm">
+            📊 مشاهده مقایسه علمی مدل‌ها (پروژه دانشگاهی)
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card card-custom p-4 p-md-5 bg-white">
+                <h2 class="text-center mb-2 text-primary fw-bold">🧠 ارزیابی هوشمند سلامت روان و بهزیستی</h2>
+                <p class="text-muted text-center mb-4">لطفاً وضعیت خود را با دقت بررسی کرده و نمره مناسب را برای هر گویه وارد کنید.</p>
+                
+                <!-- 💡 کارت راهنمای مقیاس نمره‌دهی -->
+                <div class="alert alert-info border-0 shadow-sm mb-4">
+                    <h6 class="fw-bold mb-2">📌 راهنمای مقیاس نمره‌دهی برای بخش‌های ۲ و ۳ (بازه ۱ تا ۴):</h6>
+                    <div class="row text-center g-2 mt-1">
+                        <div class="col-6 col-md-3"><span class="badge bg-white text-dark border p-2 w-100"><b>۱</b> = اصلاً / به هیچ وجه</span></div>
+                        <div class="col-6 col-md-3"><span class="badge bg-white text-dark border p-2 w-100"><b>۲</b> = کمی / گاهی اوقات</span></div>
+                        <div class="col-6 col-md-3"><span class="badge bg-white text-dark border p-2 w-100"><b>۳</b> = تا حدی / اغلب</span></div>
+                        <div class="col-6 col-md-3"><span class="badge bg-white text-dark border p-2 w-100"><b>۴</b> = بسیار زیاد / همیشه</span></div>
+                    </div>
+                </div>
+
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <!-- ۱. اطلاعات دموگرافیک -->
+                    <h5 class="section-header text-primary">۱. اطلاعات فردی و تاب‌آوری</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label class="feature-title">سن:</label>
+                            <div class="feature-desc">سن فعلی شما به سال</div>
+                            <input type="number" name="age" class="form-control" value="22" required min="10" max="100">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="feature-title">جنسیت:</label>
+                            <div class="feature-desc">انتخاب جنسیت جهت محاسبات مدل</div>
+                            <select name="sex" class="form-select">
+                                <option value="1">مرد</option>
+                                <option value="2">زن</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="feature-title">شاخص تاب‌آوری (Resilience):</label>
+                            <div class="feature-desc">قدرت بازگشت پس از سختی‌ها <span class="scale-badge">بازه: ۰ تا ۱۰۰</span></div>
+                            <input type="number" name="res" class="form-control" value="65" min="0" max="100" required>
+                        </div>
+                    </div>
+
+                    <!-- ۲. راهبردهای مقابله‌ای مثبت -->
+                    <h5 class="section-header text-success">۲. راهبردهای مقابله‌ای سازنده (Positive Coping)</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="feature-title">مقابله فعالانه (Active Coping) <span class="scale-badge">بازه: ۱ تا ۴</span></label>
+                            <div class="feature-desc">تلاش مستقیم و انجام اقدام عملی برای برطرف کردن استرس یا مشکل.</div>
+                            <input type="number" step="0.1" name="active_coping" class="form-control" value="3.0" min="1" max="4" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="feature-title">برنامه‌ریزی (Planning) <span class="scale-badge">بازه: ۱ تا ۴</span></label>
+                            <div class="feature-desc">فکر کردن به استراتژی‌ها و گام‌های عملی برای حل مشکل.</div>
+                            <input type="number" step="0.1" name="planning" class="form-control" value="3.0" min="1" max="4" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="feature-title">بازقاب‌بندی مثبت (Positive Reframing) <span class="scale-badge">بازه: ۱ تا ۴</span></label>
+                            <div class="feature-desc">نگاه کردن به مشکلات از زاویه‌ای مثبت و پیدا کردن جنبه‌های رشد در آن.</div>
+                            <input type="number" step="0.1" name="positive_reframing" class="form-control" value="3.0" min="1" max="4" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="feature-title">پذیرش (Acceptance) <span class="scale-badge">بازه: ۱ تا ۴</span></label>
+                            <div class="feature-desc">پذیرفتن واقعیت رخ‌داده و کنار آمدن با شرایط غیرقابل تغییر.</div>
+                            <input type="number" step="0.1" name="acceptance" class="form-control" value="3.0" min="1" max="4" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="feature-title">حمایت عاطفی (Emotional Support) <span class="scale-badge">بازه: ۱ تا ۴</span></label>
+                            <div class="feature-desc">دریافت همدردی، محبت و تکیه‌گاه عاطفی از دوستان یا خانواده.</div>
+                            <input type="number" step="0.1" name="emotional_support" class="form-control" value="3.0" min="1" max="4" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="feature-title">حمایت ابزاری (Instrumental Support) <span class="scale-badge">بازه: ۱ تا ۴</span></label>
+                            <div class="feature-desc">دریافت کمک‌های واقعی، مشورت عملی یا راهنمایی از دیگران.</div>
+                            <input type="number" step="0.1" name="instrumental_support" class="form-control" value="2.5" min="1" max="4" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="feature-title">شوخ‌طبعی (Humor) <span class="scale-badge">بازه: ۱ تا ۴</span></label>
+                            <div class="feature-desc">نگاه شوخ‌طبعانه به وضعیت استرس‌زا برای کاهش فشار روانی.</div>
+                            <input type="number" step="0.1" name="humor" class="form-control" value="2.0" min="1" max="4" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="feature-title">دین‌داری / معنویت (Religion) <span class="scale-badge">بازه: ۱ تا ۴</span></label>
+                            <div class="feature-desc">پناه بردن به باورهای معنوی، دعا یا فعالیت‌های مذهبی.</div>
+                            <input type="number" step="0.1" name="religion" class="form-control" value="2.5" min="1" max="4" required>
+                        </div>
+                    </div>
+
+                    <!-- ۳. راهبردهای مقابله‌ای اجتنابی و غیرسازنده -->
+                    <h5 class="section-header text-danger">۳. راهبردهای مقابله‌ای غیرسازنده و اجتنابی (Negative Coping)</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="feature-title">خودسرگرمی / حواس‌پرتی (Self-Distraction) <span class="scale-badge">بازه: ۱ تا ۴</span></label>
+                            <div class="feature-desc">مشغول کردن خود با کارهای دیگر برای فکر نکردن به مشکل اصلی.</div>
+                            <input type="number" step="0.1" name="self_distraction" class="form-control" value="2.0" min="1" max="4" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="feature-title">انکار (Denial) <span class="scale-badge">بازه: ۱ تا ۴</span></label>
+                            <div class="feature-desc">تلاش برای نادیده گرفتن یا عدم پذیرش وجود واقعیت یا استرس.</div>
+                            <input type="number" step="0.1" name="denial" class="form-control" value="1.5" min="1" max="4" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="feature-title">تخلیه هیجانی (Venting) <span class="scale-badge">بازه: ۱ تا ۴</span></label>
+                            <div class="feature-desc">ابراز و برون‌ریزی شدید احساسات منفی و ناراحتی.</div>
+                            <input type="number" step="0.1" name="venting" class="form-control" value="2.0" min="1" max="4" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="feature-title">مصرف مواد / دارو (Substance Use) <span class="scale-badge">بازه: ۱ تا ۴</span></label>
+                            <div class="feature-desc">استفاده از سیگار، دارو یا سایر مواد برای فرار از احساسات منفی.</div>
+                            <input type="number" step="0.1" name="substance_use" class="form-control" value="1.0" min="1" max="4" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="feature-title">کناره‌گیری رفتاری (Behavioral Disengagement) <span class="scale-badge">بازه: ۱ تا ۴</span></label>
+                            <div class="feature-desc">دست کشیدن از تلاش و تسلیم شدن در برابر حل مشکلات.</div>
+                            <input type="number" step="0.1" name="behavioral_disengagement" class="form-control" value="1.5" min="1" max="4" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="feature-title">سرزنش خود (Self-Blame) <span class="scale-badge">بازه: ۱ تا ۴</span></label>
+                            <div class="feature-desc">انتقاد مداوم از خود و مقصر دانستن خویشتن در بروز مشکلات.</div>
+                            <input type="number" step="0.1" name="self_blame" class="form-control" value="1.5" min="1" max="4" required>
+                        </div>
+                    </div>
+
+                    <!-- 🚀 دکمه ثبت و تحلیل -->
+                    <div class="text-center mt-5">
+                        <button type="submit" class="btn btn-primary btn-lg px-5 py-3 fw-bold rounded-pill shadow">
+                            📊 ثبت و تحلیل هوشمند بهزیستی
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap Bundle JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

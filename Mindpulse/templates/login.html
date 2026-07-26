@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ورود به سامانه | MindPulse</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <style>
+        body { background-color: #f4f7f6; font-family: Tahoma, sans-serif; }
+        .login-card { border-radius: 12px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    </style>
+</head>
+<body class="d-flex align-items-center vh-100 py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5 col-lg-4">
+                <div class="card login-card p-4 bg-white">
+                    <h4 class="text-center fw-bold text-primary mb-4">🧠 ورود به MindPulse</h4>
+                    
+                    {% if form.errors %}
+                        <div class="alert alert-danger small p-2">نام کاربری یا رمز عبور اشتباه است.</div>
+                    {% endif %}
+
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">نام کاربری:</label>
+                            <input type="text" name="username" class="form-control" required autofocus>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">رمز عبور:</label>
+                            <input type="password" name="password" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 fw-bold mt-2">ورود</button>
+                        <!-- در انتهای فایل login.html قبل از بستن card -->
+                        <div class="text-center mt-3 pt-3 border-top">
+                            <span class="small text-muted">حساب کاربری ندارید؟</span>
+                            <a href="{% url 'register' %}" class="small text-decoration-none fw-bold me-1">ثبت‌نام کنید</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

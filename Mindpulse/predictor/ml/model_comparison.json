@@ -1,0 +1,83 @@
+[
+    {
+        "model": "Linear Regression",
+        "type": "Linear",
+        "train_r2": 0.683,
+        "test_r2": 0.372,
+        "train_rmse": 5.96,
+        "test_rmse": 7.671,
+        "overfit_gap": 0.311
+    },
+    {
+        "model": "Ridge",
+        "type": "Linear",
+        "train_r2": 0.682,
+        "test_r2": 0.426,
+        "train_rmse": 5.976,
+        "test_rmse": 7.337,
+        "overfit_gap": 0.256
+    },
+    {
+        "model": "Lasso",
+        "type": "Linear",
+        "train_r2": 0.675,
+        "test_r2": 0.484,
+        "train_rmse": 6.041,
+        "test_rmse": 6.96,
+        "overfit_gap": 0.191
+    },
+    {
+        "model": "ElasticNet",
+        "type": "Linear",
+        "train_r2": 0.677,
+        "test_r2": 0.47,
+        "train_rmse": 6.019,
+        "test_rmse": 7.052,
+        "overfit_gap": 0.207
+    },
+    {
+        "model": "Random Forest",
+        "type": "Ensemble",
+        "train_r2": 0.839,
+        "test_r2": 0.602,
+        "train_rmse": 4.246,
+        "test_rmse": 6.109,
+        "overfit_gap": 0.237
+    },
+    {
+        "model": "Extra Trees",
+        "type": "Ensemble",
+        "train_r2": 0.863,
+        "test_r2": 0.577,
+        "train_rmse": 3.922,
+        "test_rmse": 6.299,
+        "overfit_gap": 0.286
+    },
+    {
+        "model": "XGBoost",
+        "type": "Ensemble",
+        "train_r2": 0.881,
+        "test_r2": 0.569,
+        "train_rmse": 3.659,
+        "test_rmse": 6.36,
+        "overfit_gap": 0.312
+    },
+    {
+        "model": "LightGBM",
+        "type": "Ensemble",
+        "train_r2": 0.8,
+        "test_r2": 0.537,
+        "train_rmse": 4.742,
+        "test_rmse": 6.589,
+        "overfit_gap": 0.262
+    },
+    {
+        "model": "Hybrid (LGBM + ElasticNet)",
+        "type": "Hybrid",
+        "train_r2": 0.753,
+        "test_r2": 0.527,
+        "train_rmse": 5.261,
+        "test_rmse": 6.661,
+        "overfit_gap": 0.226
+    }
+]

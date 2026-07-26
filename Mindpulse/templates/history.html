@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>روند و سابقه بهزیستی | MindPulse</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #f4f7f6; font-family: Tahoma, sans-serif; }
+        .card-custom { border-radius: 12px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+    </style>
+</head>
+<body class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="fw-bold text-dark mb-0">📈 روند و سوابق ارزیابی بهزیستی</h3>
+                    <a href="{% url 'predict' %}" class="btn btn-primary btn-sm">+ ارزیابی جدید</a>
+                </div>
+
+                <!-- ۱. نمودار روند (Trend Chart) -->
+                <div class="card card-custom p-4 mb-4 bg-white">
+                    <h5 class="fw-bold text-primary mb-3">نمودار تغییرات شاخص بهزیستی طی زمان</h5>
+                    {% if scores %}
+                        <div style="height: 320px;">
+                            <canvas id="trendChart"></canvas>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center my-4">هنوز هیچ ارزیابی ثبت نشده است.</p>
+                    {% endif %}
+                </div>
+
+                <!-- ۲. جدول تاریخچه ارزیابی‌ها -->
+                <div class="card card-custom p-4 bg-white">
+                    <h5 class="fw-bold text-secondary mb-3">تاریخچه آزمون‌ها</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>تاریخ ثبت</th>
+                                    <th>نمره بهزیستی</th>
+                                    <th>وضعیت</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in history %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ item.created_at|date:"Y/m/d - H:i" }}</td>
+                                    <td>
+                                        <span class="badge bg-primary fs-6">{{ item.score }} / 5</span>
+                                    </td>
+                                    <td>
+                                        {% if item.score >= 3.5 %}
+                                            <span class="text-success fw-bold">عالی / مطلوب</span>
+                                        {% elif item.score >= 2.5 %}
+                                            <span class="text-warning fw-bold">متوسط</span>
+                                        {% else %}
+                                            <span class="text-danger fw-bold">نیازمند توجه</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">سابقی یافت نشد.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- تنظیمات نمودار خطی روند -->
+    <script>
+        const dates = {{ dates|safe }};
+        const scores = {{ scores|safe }};
+
+        if (dates.length > 0) {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            
+            // ایجاد گرادینت زیر خط نمودار
+            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, 'rgba(13, 110, 253, 0.3)');
+            gradient.addColorStop(1, 'rgba(13, 110, 253, 0.0)');
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'نمره بهزیستی',
+                        data: scores,
+                        borderColor: '#0d6efd',
+                        backgroundColor: gradient,
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.3, // منحنی نرم
+                        pointBackgroundColor: '#0d6efd',
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            min: 1,
+                            // max: 5,
+                            ticks: { stepSize: 1 },
+                            title: { display: true, text: 'نمره (۱ تا ۵)' }
+                        },
+                        x: {
+                            title: { display: true, text: 'تاریخ ارزیابی' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

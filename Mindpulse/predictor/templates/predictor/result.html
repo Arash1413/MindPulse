@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نتیجه ارزیابی بهزیستی | MindPulse</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #f4f7f6; font-family: Tahoma, sans-serif; }
+        .score-box { background: linear-gradient(135deg, #0d6efd, #0dcaf0); color: white; border-radius: 15px; padding: 30px; text-align: center; }
+        .card-custom { border-radius: 12px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+        #chat-box { width: 350px; height: 450px; border-radius: 15px; border: none; }
+    </style>
+</head>
+<body class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+                <div class="card card-custom p-4 p-md-5 bg-white">
+                    <h3 class="text-center fw-bold text-dark mb-4">🧠 نتیجه تحلیل هوشمند well-being</h3>
+                    
+                    <!-- ۱. باکس نمره نهایی -->
+                    <div class="score-box mb-4 shadow-sm">
+                        <h4>نمره بهزیستی پیش‌بینی‌شده شما:</h4>
+                        <!-- <h1 class="display-3 fw-bold">{{ score }} <span class="fs-5">/ ۵</span></h1> -->
+                        <h1 class="display-3 fw-bold">{{ score }}</h1>
+
+                        <p class="mb-0">محاسبه شده توسط مدل ترکیبی LightGBM + ElasticNet</p>
+                    </div>
+
+                    <!-- ۲. نمودار راداری (عنکبوتی) -->
+                    <div class="card card-custom p-4 mb-4 border">
+                        <h5 class="fw-bold text-center text-primary mb-3">📊 تحلیل راداری ابعاد و راهبردهای روان‌شناختی</h5>
+                        <p class="text-muted text-center small mb-3">نمودار زیر پراکندگی و تعادل متغیرهای مختلف رفتار مقابله‌ای شما را نشان می‌دهد (بازه ۱ تا ۴):</p>
+                        <div style="max-width: 450px; margin: 0 auto;">
+                            <canvas id="radarChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- ۳. توصیه‌ها -->
+                    {% if recommendations %}
+                    <div class="alert alert-warning border-0 shadow-sm mb-4">
+                        <h5 class="fw-bold mb-2">💡 توصیه و راهکارهای اختصاصی بهبود:</h5>
+                        <ul class="mb-0">
+                            {% for rec in recommendations %}
+                                <li class="mb-1">{{ rec }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-success border-0 shadow-sm mb-4">
+                        وضعیت شاخص‌های شما در سطح بسیار مطلوبی قرار دارد. به همین مسیر ادامه دهید!
+                    </div>
+                    {% endif %}
+
+                    <!-- 🔘 فرم مخفی برای ارسال نمودار و دانلود PDF -->
+                    <form id="pdfForm" action="{% url 'export_pdf' %}" method="POST" class="d-none">
+                        {% csrf_token %}
+                        <input type="hidden" name="score" value="{{ score }}">
+                        <input type="hidden" name="age" value="{{ age }}">
+                        <input type="hidden" name="sex" value="{{ sex }}">
+                        <input type="hidden" name="res" value="{{ res }}">
+                        <input type="hidden" name="chart_image" id="chartImageInput">
+                    </form>
+
+                    <!-- 🔘 دکمه‌های عملیات -->
+                    <div class="d-flex justify-content-center gap-2 flex-wrap mt-2">
+                        <a href="{% url 'predict' %}" class="btn btn-outline-primary px-3">ارزیابی مجدد</a>
+                        <button onclick="downloadPDFWithChart()" class="btn btn-danger px-3 fw-bold">
+                            📄 دانلود کارنامه رسمی همراه با نمودار (PDF)
+                        </button>
+                        <a href="{% url 'compare' %}" class="btn btn-primary px-3">📊 گزارش مقایسه مدل‌ها</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 💬 ویجت چت‌بات شناور MindPulse -->
+    <div id="chat-widget" style="position: fixed; bottom: 25px; left: 25px; z-index: 1000;">
+        <!-- دکمه شناور باز کردن چت -->
+        <button id="chat-toggle-btn" class="btn btn-primary rounded-circle shadow-lg p-3" onclick="toggleChat()">
+            💬 <span class="d-none d-md-inline ms-1 fw-bold">مشاور هوشمند</span>
+        </button>
+
+        <!-- پنجره چت -->
+        <div id="chat-box" class="card shadow-lg d-none mt-2 flex-column">
+            <!-- هدر چت -->
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center" style="border-radius: 15px 15px 0 0;">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fs-5">🤖</span>
+                    <h6 class="mb-0 fw-bold">دستیار روان‌شناسی MindPulse</h6>
+                </div>
+                <button type="button" class="btn-close btn-close-white" onclick="toggleChat()"></button>
+            </div>
+
+            <!-- بدنه پیام‌ها -->
+            <div id="chat-messages" class="card-body overflow-auto p-3 flex-grow-1" style="background-color: #f8f9fa; font-size: 0.9rem;">
+                <div class="bg-white p-2 rounded-3 shadow-sm mb-2 text-dark border">
+                    سلام! من دستیار هوشمند MindPulse هستم. با توجه به نتایج ارزیابی شما، چطور می‌توانم در تحلیل ابعاد روان‌شناختی یا ارائه راهکارهای بهبود به شما کمک کنم؟
+                </div>
+            </div>
+
+            <!-- انیمیشن در حال تایپ -->
+            <div id="chat-loading" class="px-3 py-1 text-muted small d-none">
+                <em>Gemini در حال پاسخ‌دهی...</em>
+            </div>
+
+            <!-- فوتور و ورودی متن -->
+            <div class="card-footer bg-white border-0 p-2">
+                <div class="input-group">
+                    <input type="text" id="chat-input" class="form-control form-control-sm" placeholder="سوال خود را بنویسید..." onkeypress="handleKeyPress(event)">
+                    <button id="send-btn" class="btn btn-primary btn-sm" onclick="sendMessage()">ارسال</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const radarLabels = {{ radar_labels|safe }};
+        const radarValues = {{ radar_values|safe }};
+
+        // پلاگین پس‌زمینه سفید برای خروجی چارت در PDF
+        const whiteBackgroundPlugin = {
+            id: 'customCanvasBackgroundColor',
+            beforeDraw: (chart) => {
+                const {ctx} = chart;
+                ctx.save();
+                ctx.globalCompositeOperation = 'destination-over';
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, chart.width, chart.height);
+                ctx.restore();
+            }
+        };
+
+        const ctx = document.getElementById('radarChart').getContext('2d');
+        const radarChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: radarLabels,
+                datasets: [{
+                    label: 'امتیاز شما',
+                    data: radarValues,
+                    backgroundColor: 'rgba(13, 110, 253, 0.25)',
+                    borderColor: '#0d6efd',
+                    pointBackgroundColor: '#0d6efd',
+                    pointBorderColor: '#fff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                animation: false,
+                scales: {
+                    r: {
+                        angleLines: { color: '#cbd5e1' },
+                        grid: { color: '#cbd5e1' },
+                        suggestedMin: 1,
+                        suggestedMax: 4,
+                        ticks: { stepSize: 1 }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            },
+            plugins: [whiteBackgroundPlugin]
+        });
+
+        function downloadPDFWithChart() {
+            const canvas = document.getElementById('radarChart');
+            const chartBase64 = canvas.toDataURL('image/jpeg', 1.0);
+            document.getElementById('chartImageInput').value = chartBase64;
+            document.getElementById('pdfForm').submit();
+        }
+
+        // چت‌بات
+        function toggleChat() {
+            const chatBox = document.getElementById('chat-box');
+            chatBox.classList.toggle('d-none');
+            if (!chatBox.classList.contains('d-none')) {
+                chatBox.style.display = 'flex';
+            } else {
+                chatBox.style.display = '';
+            }
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const sendBtn = document.getElementById('send-btn');
+            const message = input.value.trim();
+            if (!message) return;
+
+            const messagesContainer = document.getElementById('chat-messages');
+            const loadingIndicator = document.getElementById('chat-loading');
+
+            // نمایش پیام کاربر
+            const userBubble = document.createElement('div');
+            userBubble.className = 'bg-primary text-white p-2 rounded-3 shadow-sm mb-2 text-end ms-auto';
+            userBubble.style.maxWidth = '85%';
+            userBubble.innerText = message;
+            messagesContainer.appendChild(userBubble);
+
+            input.value = '';
+            input.disabled = true;
+            sendBtn.disabled = true;
+            messagesContainer.scrollTo({ top: messagesContainer.scrollHeight, behavior: 'smooth' });
+            loadingIndicator.classList.remove('d-none');
+
+            const userContext = {
+                wellbeing_score: "{{ score }}",
+                labels: radarLabels,
+                values: radarValues
+            };
+
+            try {
+                const response = await fetch("{% url 'chatbot_api' %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": "{{ csrf_token }}"
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        context: userContext
+                    })
+                });
+
+                const data = await response.json();
+                loadingIndicator.classList.add('d-none');
+
+                const botBubble = document.createElement('div');
+                botBubble.style.maxWidth = '85%';
+                
+                if (data.status === 'success') {
+                    botBubble.className = 'bg-white p-2 rounded-3 shadow-sm mb-2 text-dark border me-auto';
+                    botBubble.innerText = data.reply;
+                } else {
+                    botBubble.className = 'bg-white text-danger p-2 rounded-3 shadow-sm mb-2 border me-auto';
+                    botBubble.innerText = data.message || "متأسفانه مشکلی در دریافت پاسخ رخ داد.";
+                }
+
+                messagesContainer.appendChild(botBubble);
+                messagesContainer.scrollTo({ top: messagesContainer.scrollHeight, behavior: 'smooth' });
+
+            } catch (error) {
+                loadingIndicator.classList.add('d-none');
+                const errorBubble = document.createElement('div');
+                errorBubble.className = 'bg-white text-danger p-2 rounded-3 shadow-sm mb-2 border me-auto';
+                errorBubble.innerText = "خطا در اتصال به سرور.";
+                messagesContainer.appendChild(errorBubble);
+            } finally {
+                input.disabled = false;
+                sendBtn.disabled = false;
+                input.focus();
+            }
+        }
+    </script>
+</body>
+</html>
