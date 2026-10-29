@@ -29,3 +29,9 @@ Bootstrap — طراحی رابط کاربری
 Artificial Intelligence (AI) — فناوری هوش مصنوعی
 
 Brief COPE — چارچوب مرتبط با راهبردهای مقابله‌ای
+
+
+![Project Screenshot](mindpulse.png)
+![Project Screenshot](mindpulse(2).png)
+![Project Screenshot](mindpulse(3).png)
+![Project Screenshot](mindpulse(4).png)
